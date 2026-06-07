@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from PyQt6 import QtCore, QtWidgets
 
-from core.veiculo_repo import VeiculoRepo
+from core.veiculo_repo_factory import obter_veiculo_repo
 from modelos.veiculo import Veiculo
 
 
@@ -17,7 +17,7 @@ class VeiculoDialog(QtWidgets.QDialog):
         parent: QtWidgets.QWidget | None = None,
     ) -> None:
         super().__init__(parent)
-        self._repo = VeiculoRepo()
+        self._repo = obter_veiculo_repo()
         self._veiculo = veiculo or Veiculo(cod_cli=cod_cli)
         if self._veiculo.cod_cli is None and cod_cli is not None:
             self._veiculo.cod_cli = cod_cli
