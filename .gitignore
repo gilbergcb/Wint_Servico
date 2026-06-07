@@ -1,0 +1,16 @@
+.venv/
+.venv-build32/
+__pycache__/
+*.py[cod]
+*.pyo
+*.log
+.env
+scripts/mcp_oracle_dev.env
+build/
+dist/
+*.spec
+!PCWNT_9520.spec
+logs/
+assets/tmp/
+outputs/
+*.trc

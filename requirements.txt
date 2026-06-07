@@ -1,0 +1,11 @@
+PyQt6==6.6.1
+PyQt6-Qt6==6.6.1
+PyQt6-sip==13.6.0
+oracledb==2.5.1
+SQLAlchemy==2.0.36
+python-dotenv==1.0.1
+pyinstaller==6.20.0
+# NFS-e (opcional - habilitar na Fase 5 conforme provedor/municipio):
+# PyNFe==0.4.6
+# signxml
+# requests

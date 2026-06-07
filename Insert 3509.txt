@@ -1,0 +1,108 @@
+ INSERT
+  INTO PCORDEMSERVICOI( 
+                        NUMOSSERVICO 
+                       ,NUMOS
+                       ,CODPROD
+                       ,CODFUNC
+                       ,PRECO
+                       ,PUNIT
+                       ,QTDE
+                       ,DTINICIO
+                       ,DTFINAL
+                       ,RETERISS
+                     ,PERCCOMISSAO
+                     ,COMISSAO
+                       ,TITULOLEVANTAMENTO
+                       ,DETALHELEVANTAMENTO
+                       ,PERCALIQISSRETIDA)
+VALUES 
+                       (:NUMOSSERVICO 
+                       ,:NUMOS
+                       ,:CODPROD
+                       ,:CODFUNC
+                       ,:PRECO
+                       ,:PUNIT
+                       ,:QTDE
+                       ,:DTINICIO
+                       ,:DTFINAL
+                       ,:RETERISS
+                   ,:PERCCOMISSAO
+                   ,:COMISSAO
+                       ,:TITULOLEVANTAMENTO
+                       ,:DETALHELEVANTAMENTO
+                       ,:PERCALIQISSRETIDA)
+
+
+ INSERT INTO PCORDEMSERVICO ( 
+                            NUMOS 
+                           ,CODEMITENTE
+                           ,CODRCA
+                           ,TIPOOS
+                           ,CODPRODPRINC
+                           ,NUMOSPRIMARIA
+                           ,REMESSACOMODATO
+                           ,NUMCONTRATOCOMODATO
+                           ,CODPLPAG
+                           ,CODCLI
+                           ,CODFILIAL
+                           ,OBS
+                           ,CODCOB
+                           ,NUMSERIE
+                           ,DTPREVTERM
+                           ,SITUACAO
+                           ,DTCADASTRO
+                           ,DTFECHA
+                           ,CODOSVEICULO
+                           ,KM
+                           ,NUMTRANSVENDAPROD
+                           ,NUMTRANSVENDASERV
+                           ,NUMNOTAPREF      
+           ) VALUES( 
+                            :NUMOS 
+                           ,:CODEMITENTE
+                           ,:CODRCA
+                           ,:TIPOOS
+                           ,:CODPRODPRINC
+                           ,:NUMOSPRIMARIA
+                           ,:REMESSACOMODATO
+                           ,:NUMCONTRATOCOMODATO
+                           ,:CODPLPAG
+                           ,:CODCLI
+                           ,:CODFILIAL
+                           ,:OBS
+                           ,:CODCOB
+                           ,:NUMSERIE
+                           ,:DTPREVTERM
+                           ,:SITUACAO
+                           ,TRUNC(SYSDATE)
+                           ,NULL
+                           ,:CODOSVEICULO
+                           ,:KM
+                           ,:NUMTRANSVENDAPROD
+                           ,:NUMTRANSVENDASERV
+                           ,:NUMNOTAPREF )
+
+
+ INSERT INTO PCLOGDADOSPESSOAS(                        
+                         DATA_REGISTRO,                
+                         DATA_REQUISICAO,              
+                         DESCRICAO,                    
+                         DADOS_ANTERIOR,               
+                         DADOS_ATUAL,                  
+                         CODIGO_CADASTRO,              
+                         TABELA,                       
+                         MATRICULA,                    
+                         ROTINA,                       
+                         HASH                          
+                       ) VALUES (                      
+                         :DATA_REGISTRO,               
+                         :DATA_REQUISICAO,             
+                         :DESCRICAO,                   
+                         :DADOS_ANTERIOR,              
+                         :DADOS_ATUAL,                 
+                         :CODIGO_CADASTRO,             
+                         :TABELA,                      
+                         :MATRICULA,                   
+                         :ROTINA,                      
+                         :HASH                         
+                        )

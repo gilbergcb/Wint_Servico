@@ -1,0 +1,4 @@
+# Um CODCLIPC por linha. Comentarios apos # sao ignorados.
+# Edite aqui e rode build.bat (ou scripts/gerar_licenca_config.py)
+# para regenerar core/licenca_config.py.
+-790   # ambiente de teste
