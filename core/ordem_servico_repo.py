@@ -218,11 +218,11 @@ class OrdemServicoRepo:
                     "NUMOS, CODFILIAL, CODCLI, CODRCA, CODFUNCABERTURA, CODVEICULO, "
                     "TIPOOS, SITUACAO, KM, CODCOB, CODPLPAG, VLTOTALSERVICO, "
                     "VLTOTALPRODUTO, VLDESCONTO, VLTOTAL, DTCADASTRO, DTPREVTERM, "
-                    "OBS, USUARIOCAD) VALUES ("
+                    "NUMPED, OBS, USUARIOCAD) VALUES ("
                     ":numos, :codfilial, :codcli, :codrca, :codfunc, :codveiculo, "
                     ":tipoos, :situacao, :km, :codcob, :codplpag, :vlserv, "
                     ":vlprod, :vldesc, :vltotal, SYSDATE, :dtprev, "
-                    ":obs, :usuario)"
+                    ":numped, :obs, :usuario)"
                 ),
                 self._params_cabecalho(os_, num_os),
             )
@@ -239,7 +239,8 @@ class OrdemServicoRepo:
                     "CODFUNCABERTURA = :codfunc, CODVEICULO = :codveiculo, TIPOOS = :tipoos, "
                     "SITUACAO = :situacao, KM = :km, CODCOB = :codcob, CODPLPAG = :codplpag, "
                     "VLTOTALSERVICO = :vlserv, VLTOTALPRODUTO = :vlprod, VLDESCONTO = :vldesc, "
-                    "VLTOTAL = :vltotal, DTPREVTERM = :dtprev, OBS = :obs, USUARIOCAD = :usuario "
+                    "VLTOTAL = :vltotal, DTPREVTERM = :dtprev, NUMPED = :numped, "
+                    "OBS = :obs, USUARIOCAD = :usuario "
                     "WHERE NUMOS = :numos"
                 ),
                 self._params_cabecalho(os_, os_.num_os),
@@ -281,6 +282,7 @@ class OrdemServicoRepo:
             "vldesc": os_.vl_desconto,
             "vltotal": os_.vl_total,
             "dtprev": os_.dt_prev_term,
+            "numped": os_.num_ped,
             "obs": os_.obs,
             "usuario": os_.usuario_cad,
         }

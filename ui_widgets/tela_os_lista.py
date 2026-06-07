@@ -10,7 +10,7 @@ from datetime import datetime, time
 from PyQt6 import QtCore, QtWidgets
 
 from core.conexao_oracle import ConexaoOracle
-from core.ordem_servico_repo import OrdemServicoRepo
+from core.os_repo_factory import obter_os_repo
 from modelos.ordem_servico import OrdemServico, SituacaoOS
 from ui_widgets.tela_os_edicao import TelaOSEdicao
 from ui_widgets.theme import marcar_botao
@@ -36,7 +36,6 @@ _ROTULO_SITUACAO = {
 class TelaOSLista(QtWidgets.QWidget):
     def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
         super().__init__(parent)
-        self._repo = OrdemServicoRepo()
         self._ordens: list[OrdemServico] = []
         self._montar_ui()
 
@@ -138,7 +137,7 @@ class TelaOSLista(QtWidgets.QWidget):
             dt_ini = datetime.combine(self.dt_ini.date().toPyDate(), time.min)
             dt_fim = datetime.combine(self.dt_fim.date().toPyDate(), time.max)
         try:
-            self._ordens = self._repo.listar(
+            self._ordens = obter_os_repo().listar(
                 num_os=self.spin_numos.value() or None,
                 cod_cli=self.spin_cliente.value() or None,
                 situacao=int(self.cmb_situacao.currentData()) if self.cmb_situacao.currentData() else None,

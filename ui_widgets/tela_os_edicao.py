@@ -14,7 +14,10 @@ from PyQt6 import QtCore, QtWidgets
 import parametros_winthor
 from core.cliente_repo import ClienteRepo
 from core.conexao_oracle import ConexaoOracle
-from core.ordem_servico_repo import OrdemServicoRepo
+from core.os_repo_factory import obter_os_repo
+from core.parametro_repo import ParametroRepo
+from core.pedido_repo import PedidoRepo
+from core.permissao_repo import CONTROLE_DISPENSA_PEDIDO, PermissaoRepo
 from modelos.item_produto import ItemProduto
 from modelos.item_servico import ItemServico
 from modelos.ordem_servico import OrdemServico, SituacaoOS
@@ -22,6 +25,7 @@ from servicos.calculadora_os import calcular_totais
 from ui_widgets.cliente_lookup_dialog import ClienteLookupDialog
 from ui_widgets.item_produto_dialog import ItemProdutoDialog
 from ui_widgets.item_servico_dialog import ItemServicoDialog
+from ui_widgets.pedido_lookup_dialog import PedidoLookupDialog
 from ui_widgets.theme import marcar_botao
 from ui_widgets.veiculo_dialog import VeiculoDialog
 
@@ -37,7 +41,7 @@ _SITUACOES = [
 class TelaOSEdicao(QtWidgets.QDialog):
     def __init__(self, num_os: int | None = None, parent: QtWidgets.QWidget | None = None) -> None:
         super().__init__(parent)
-        self._repo = OrdemServicoRepo()
+        self._repo = obter_os_repo()
         self._num_os = num_os
         self._os = OrdemServico()
         self._servicos: list[ItemServico] = []
@@ -74,6 +78,20 @@ class TelaOSEdicao(QtWidgets.QDialog):
         linha_cli.addWidget(btn_cli)
         linha_cli.addWidget(self.lbl_cliente, 1)
         form.addRow("Cliente:", linha_cli)
+
+        linha_ped = QtWidgets.QHBoxLayout()
+        self.spin_pedido = QtWidgets.QSpinBox()
+        self.spin_pedido.setRange(0, 2147483647)  # limite do QSpinBox (int 32-bit)
+        self.spin_pedido.setSpecialValueText("(nenhum)")
+        self.lbl_pedido = QtWidgets.QLabel("")
+        self.lbl_pedido.setObjectName("telaSubtitulo")
+        btn_ped = QtWidgets.QPushButton("...")
+        btn_ped.setFixedWidth(34)
+        btn_ped.clicked.connect(self._buscar_pedido)
+        linha_ped.addWidget(self.spin_pedido)
+        linha_ped.addWidget(btn_ped)
+        linha_ped.addWidget(self.lbl_pedido, 1)
+        form.addRow("Pedido venda*:", linha_ped)
 
         self.txt_filial = QtWidgets.QLineEdit()
         self.txt_filial.setMaxLength(2)
@@ -256,6 +274,9 @@ class TelaOSEdicao(QtWidgets.QDialog):
 
     def _preencher_cabecalho(self, os_: OrdemServico) -> None:
         self.spin_cliente.setValue(os_.cod_cli or 0)
+        self.spin_pedido.setValue(os_.num_ped or 0)
+        if os_.num_ped:
+            self.lbl_pedido.setText(f"Pedido {os_.num_ped}")
         self.txt_filial.setText(os_.cod_filial or "")
         self.spin_rca.setValue(os_.cod_rca or 0)
         self.spin_veiculo.setValue(os_.cod_veiculo or 0)
@@ -282,6 +303,35 @@ class TelaOSEdicao(QtWidgets.QDialog):
             self.spin_cliente.setValue(dlg.selecionado["cod_cli"])
             self.lbl_cliente.setText(dlg.selecionado["nome"] or "")
 
+    # ------------------------------------------------------------------ pedido
+    def _buscar_pedido(self) -> None:
+        if self._offline():
+            return
+        cod_cli = self.spin_cliente.value() or None
+        if cod_cli is None:
+            QtWidgets.QMessageBox.information(
+                self, "Pedido de venda", "Selecione o cliente antes de buscar o pedido."
+            )
+            return
+        dlg = PedidoLookupDialog(cod_cli, self)
+        if dlg.exec() and dlg.selecionado:
+            self.spin_pedido.setValue(dlg.selecionado["num_ped"])
+            self.lbl_pedido.setText(f"Pedido {dlg.selecionado['num_ped']}")
+
+    def _pedido_obrigatorio(self) -> bool:
+        """Regra global (PEDIDO_OBRIGATORIO) com excecao por usuario.
+
+        Usuario com ACESSO ao controle CONTROLE_DISPENSA_PEDIDO (PCCONTROI) fica
+        dispensado de informar o pedido. Em caso de falha de leitura, exige o
+        pedido (fail-safe).
+        """
+        try:
+            if not ParametroRepo().pedido_obrigatorio():
+                return False
+            return not PermissaoRepo().tem_acesso(CONTROLE_DISPENSA_PEDIDO)
+        except Exception:  # noqa: BLE001
+            return True
+
     # ------------------------------------------------------------------ veiculo
     def _abrir_veiculo(self) -> None:
         if self._offline():
@@ -290,9 +340,9 @@ class TelaOSEdicao(QtWidgets.QDialog):
         veiculo = None
         if self.spin_veiculo.value():
             try:
-                from core.veiculo_repo import VeiculoRepo
+                from core.veiculo_repo_factory import obter_veiculo_repo
 
-                veiculo = VeiculoRepo().obter(self.spin_veiculo.value())
+                veiculo = obter_veiculo_repo().obter(self.spin_veiculo.value())
             except Exception:  # noqa: BLE001
                 veiculo = None
         dlg = VeiculoDialog(veiculo, cod_cli, self)
@@ -300,9 +350,9 @@ class TelaOSEdicao(QtWidgets.QDialog):
             return
         v = dlg.veiculo
         try:
-            from core.veiculo_repo import VeiculoRepo
+            from core.veiculo_repo_factory import obter_veiculo_repo
 
-            repo = VeiculoRepo()
+            repo = obter_veiculo_repo()
             if v.cod_veiculo is None:
                 v.cod_veiculo = repo.inserir(v)
             else:
@@ -407,6 +457,34 @@ class TelaOSEdicao(QtWidgets.QDialog):
             self.txt_filial.setFocus()
             return
         os_.cod_cli = self.spin_cliente.value() or None
+        num_ped = self.spin_pedido.value() or None
+        if self._pedido_obrigatorio() and num_ped is None:
+            QtWidgets.QMessageBox.warning(
+                self, "Validacao", "Informe o pedido de venda do Winthor (obrigatorio)."
+            )
+            self.spin_pedido.setFocus()
+            return
+        if num_ped is not None:
+            if os_.cod_cli is None:
+                QtWidgets.QMessageBox.warning(
+                    self, "Validacao", "Informe o cliente para validar o pedido de venda."
+                )
+                self.spin_cliente.setFocus()
+                return
+            try:
+                pedido = PedidoRepo().validar(num_ped, os_.cod_cli)
+            except Exception as exc:  # noqa: BLE001
+                QtWidgets.QMessageBox.critical(self, "Validacao", f"Falha ao validar o pedido:\n{exc}")
+                return
+            if pedido is None:
+                QtWidgets.QMessageBox.warning(
+                    self, "Validacao",
+                    f"Pedido {num_ped} invalido: precisa existir, nao estar cancelado "
+                    f"e pertencer ao cliente {os_.cod_cli}.",
+                )
+                self.spin_pedido.setFocus()
+                return
+        os_.num_ped = num_ped
         os_.cod_rca = self.spin_rca.value() or None
         os_.cod_veiculo = self.spin_veiculo.value() or None
         os_.km = self.spin_km.value() or None

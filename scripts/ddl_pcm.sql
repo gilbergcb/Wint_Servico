@@ -279,6 +279,20 @@ BEGIN
 END;
 /
 
+-- ---------------------------------------------------------------------
+-- PCM_PARAM  -- parametros de configuracao da rotina (chave/valor)
+-- Ex.: TIPO_FATURAMENTO = 'INTERNO' (PCM_OS_FATURA) | 'WINTHOR' (PCPREST).
+-- Chave informada pela aplicacao; nao precisa de sequence/trigger.
+-- ---------------------------------------------------------------------
+CREATE TABLE PCM_PARAM (
+  CHAVE             VARCHAR2(40)    NOT NULL,                  -- PK logica do parametro
+  VALOR             VARCHAR2(400),
+  DESCRICAO         VARCHAR2(200),
+  DTALTERACAO       DATE            DEFAULT SYSDATE,
+  USUARIO           VARCHAR2(30),
+  CONSTRAINT PK_PCM_PARAM PRIMARY KEY (CHAVE)
+);
+
 -- =====================================================================
 -- FIM DDL PCM_*
 -- =====================================================================

@@ -12,7 +12,7 @@ from PyQt6 import QtCore, QtWidgets
 
 import parametros_winthor
 from core.conexao_oracle import ConexaoOracle
-from core.ordem_servico_repo import OrdemServicoRepo
+from core.os_repo_factory import obter_os_repo
 from core.tecnico_repo import TecnicoRepo
 from modelos.ordem_servico import OrdemServico, SituacaoOS
 from servicos.faturador_os import FaturadorOS, FaturamentoError
@@ -42,7 +42,6 @@ _KPIS = [
 class TelaAcompanhamento(QtWidgets.QWidget):
     def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
         super().__init__(parent)
-        self._repo = OrdemServicoRepo()
         self._ordens: list[OrdemServico] = []
         self._kpi_labels: dict[SituacaoOS, QtWidgets.QLabel] = {}
         self._montar_ui()
@@ -182,13 +181,14 @@ class TelaAcompanhamento(QtWidgets.QWidget):
         dt_ini, dt_fim = self._periodo()
         cod_func = self.cmb_tecnico.currentData()
         try:
-            self._ordens = self._repo.listar(
+            repo = obter_os_repo()
+            self._ordens = repo.listar(
                 situacao=int(self.cmb_situacao.currentData()) if self.cmb_situacao.currentData() else None,
                 cod_func=cod_func,
                 dt_ini=dt_ini,
                 dt_fim=dt_fim,
             )
-            contagem = self._repo.contar_por_situacao(cod_func=cod_func, dt_ini=dt_ini, dt_fim=dt_fim)
+            contagem = repo.contar_por_situacao(cod_func=cod_func, dt_ini=dt_ini, dt_fim=dt_fim)
         except Exception as exc:  # noqa: BLE001
             QtWidgets.QMessageBox.warning(self, "Acompanhamento", f"Falha ao pesquisar:\n{exc}")
             return
@@ -228,7 +228,7 @@ class TelaAcompanhamento(QtWidgets.QWidget):
             )
             return
         try:
-            self._repo.alterar_situacao(os_.num_os, int(nova))
+            obter_os_repo().alterar_situacao(os_.num_os, int(nova))
         except Exception as exc:  # noqa: BLE001
             QtWidgets.QMessageBox.critical(self, "Acompanhamento", f"Falha ao alterar situacao:\n{exc}")
             return
@@ -245,7 +245,7 @@ class TelaAcompanhamento(QtWidgets.QWidget):
         if not ok or not motivo.strip():
             return
         try:
-            self._repo.cancelar(os_.num_os, motivo.strip())
+            obter_os_repo().cancelar(os_.num_os, motivo.strip())
         except Exception as exc:  # noqa: BLE001
             QtWidgets.QMessageBox.critical(self, "Acompanhamento", f"Falha ao cancelar:\n{exc}")
             return

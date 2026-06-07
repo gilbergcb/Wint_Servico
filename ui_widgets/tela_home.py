@@ -10,7 +10,7 @@ from datetime import date, datetime, timedelta
 from PyQt6 import QtCore, QtWidgets
 
 from core.conexao_oracle import ConexaoOracle
-from core.ordem_servico_repo import OrdemServicoRepo
+from core.os_repo_factory import obter_os_repo
 from core.relatorio_repo import RelatorioRepo
 from modelos.ordem_servico import SituacaoOS
 from ui_widgets.theme import marcar_botao
@@ -48,7 +48,6 @@ def _intervalo(chave: str) -> tuple[datetime, datetime]:
 class TelaHome(QtWidgets.QWidget):
     def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
         super().__init__(parent)
-        self._os_repo = OrdemServicoRepo()
         self._rel_repo = RelatorioRepo()
         self._periodo = "mes"
         self._cards: dict[object, QtWidgets.QLabel] = {}
@@ -130,7 +129,7 @@ class TelaHome(QtWidgets.QWidget):
             self.tabela.setRowCount(0)
             return
         try:
-            contagem = self._os_repo.contar_por_situacao(dt_ini=dt_ini, dt_fim=dt_fim)
+            contagem = obter_os_repo().contar_por_situacao(dt_ini=dt_ini, dt_fim=dt_fim)
             _, linhas = self._rel_repo.servicos_mais_executados(dt_ini, dt_fim, limite=10)
         except Exception as exc:  # noqa: BLE001
             QtWidgets.QMessageBox.warning(self, "Inicio", f"Falha ao carregar painel:\n{exc}")
