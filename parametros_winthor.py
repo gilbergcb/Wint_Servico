@@ -11,12 +11,12 @@ USUARIOBD: str = ""
 CODROTINA: str = ""
 CHAMADO_PELO_MENU: bool = False
 
-# Codigo generico da rotina no menu Winthor (provisorio; trocar se/quando
-# for atribuido um codigo oficial). Em runtime o CODROTINA vindo do menu
-# (argv[5]) prevalece sobre este padrao.
+# Código genérico da rotina no menu Winthor (provisório; trocar se/quando
+# for atribuído um código oficial). Em runtime o CODROTINA vindo do menu
+# (argv[5]) prevalece sobre este padrão.
 COD_ROTINA_PADRAO = 9520
-NOME_ROTINA = "Servico / Oficina"
-TITULO_ROTINA = "Ordem de Servico - Oficina / Borracharia"
+NOME_ROTINA = "Serviço / Oficina"
+TITULO_ROTINA = "Ordem de Serviço - Oficina / Borracharia"
 
 
 def carregar_parametros() -> None:
@@ -51,3 +51,4 @@ def cod_rotina_atual() -> int:
 
 def descricao_rotina() -> str:
     return f"{cod_rotina_atual()} {NOME_ROTINA}"
+

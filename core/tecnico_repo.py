@@ -1,9 +1,4 @@
-"""Repositorio de tecnicos (consulta a PCEMPR; MATRICULA = CODFUNC).
-
-Tabela nativa - somente leitura. Ativo = DTDEMISSAO IS NULL.
-Colunas nativas assumidas (TODO confirmar no banco quando voltar):
-  MATRICULA, NOME, DTDEMISSAO.
-"""
+"""Repositorio de tecnicos (consulta a PCEMPR; MATRICULA = CODFUNC)."""
 from __future__ import annotations
 
 from typing import Any
@@ -11,6 +6,7 @@ from typing import Any
 from sqlalchemy import text
 
 from core.db_engine import get_engine
+from core.parametro_repo import ParametroRepo
 from core.sqlutil import colmap
 
 
@@ -25,12 +21,15 @@ def _row_para_dict(row: Any) -> dict:
 class TecnicoRepo:
     def listar_ativos(self) -> list[dict]:
         """Retorna tecnicos ativos de PCEMPR (matricula, nome)."""
+        cod_setor = ParametroRepo().setor_tecnicos()
         sql = (
             "SELECT MATRICULA, NOME FROM PCEMPR "
-            "WHERE DTDEMISSAO IS NULL ORDER BY NOME"
+            "WHERE DTDEMISSAO IS NULL AND NVL(SITUACAO, 'A') = 'A' "
+            + ("AND CODSETOR = :cod_setor " if cod_setor is not None else "")
+            + "ORDER BY NOME"
         )
         with get_engine().connect() as cx:
-            rows = cx.execute(text(sql)).fetchall()
+            rows = cx.execute(text(sql), {"cod_setor": cod_setor} if cod_setor is not None else {}).fetchall()
         return [_row_para_dict(r) for r in rows]
 
     def obter(self, matricula: int) -> dict | None:

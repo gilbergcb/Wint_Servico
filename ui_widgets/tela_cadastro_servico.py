@@ -11,7 +11,7 @@ from core.conexao_oracle import ConexaoOracle
 from core.servico_repo import ServicoRepo
 from modelos.servico import Servico
 from ui_widgets.servico_dialog import ServicoDialog
-from ui_widgets.theme import marcar_botao
+from ui_widgets.theme import configurar_grid, marcar_botao
 
 
 class TelaCadastroServico(QtWidgets.QWidget):
@@ -27,14 +27,14 @@ class TelaCadastroServico(QtWidgets.QWidget):
         layout.setContentsMargins(20, 18, 20, 18)
         layout.setSpacing(10)
 
-        titulo = QtWidgets.QLabel("Cadastro de Servico")
+        titulo = QtWidgets.QLabel("Cadastro de Serviço")
         titulo.setObjectName("telaTitulo")
         layout.addWidget(titulo)
 
         # --- barra de busca ---
         busca = QtWidgets.QHBoxLayout()
         self.txt_busca = QtWidgets.QLineEdit()
-        self.txt_busca.setPlaceholderText("Codigo ou descricao do servico...")
+        self.txt_busca.setPlaceholderText("Código ou descrição do serviço...")
         self.txt_busca.returnPressed.connect(self._pesquisar)
         self.chk_somente_ativos = QtWidgets.QCheckBox("Somente ativos")
         self.chk_somente_ativos.setChecked(True)
@@ -47,7 +47,8 @@ class TelaCadastroServico(QtWidgets.QWidget):
 
         # --- tabela ---
         self.tabela = QtWidgets.QTableWidget(0, 5)
-        self.tabela.setHorizontalHeaderLabels(["Codigo", "Descricao", "Preco", "ISS %", "Ativo"])
+        configurar_grid(self.tabela)
+        self.tabela.setHorizontalHeaderLabels(["Código", "Descrição", "Preço", "ISS %", "Ativo"])
         cab = self.tabela.horizontalHeader()
         cab.setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeMode.Stretch)
         self.tabela.setEditTriggers(QtWidgets.QAbstractItemView.EditTrigger.NoEditTriggers)
@@ -78,7 +79,7 @@ class TelaCadastroServico(QtWidgets.QWidget):
     # ----------------------------------------------------------------- helpers
     def _offline(self) -> bool:
         if ConexaoOracle.instance().offline:
-            self.lbl_status.setText("Sem conexao com o banco (modo dev). Operacoes indisponiveis.")
+            self.lbl_status.setText("Sem conexão com o banco (modo dev). Operações indisponíveis.")
             return True
         return False
 
@@ -97,10 +98,10 @@ class TelaCadastroServico(QtWidgets.QWidget):
         try:
             self._servicos = self._repo.listar(self.txt_busca.text(), ativo=ativo)
         except Exception as exc:  # noqa: BLE001
-            QtWidgets.QMessageBox.warning(self, "Pesquisar servicos", f"Falha ao pesquisar:\n{exc}")
+            QtWidgets.QMessageBox.warning(self, "Pesquisar serviços", f"Falha ao pesquisar:\n{exc}")
             return
         self._preencher_tabela()
-        self.lbl_status.setText(f"{len(self._servicos)} servico(s)")
+        self.lbl_status.setText(f"{len(self._servicos)} serviço(s)")
 
     def _preencher_tabela(self) -> None:
         self.tabela.setRowCount(0)
@@ -113,7 +114,7 @@ class TelaCadastroServico(QtWidgets.QWidget):
             it_preco.setTextAlignment(QtCore.Qt.AlignmentFlag.AlignRight | QtCore.Qt.AlignmentFlag.AlignVCenter)
             self.tabela.setItem(linha, 2, it_preco)
             self.tabela.setItem(linha, 3, QtWidgets.QTableWidgetItem(f"{s.perc_aliq_iss:.2f}"))
-            self.tabela.setItem(linha, 4, QtWidgets.QTableWidgetItem("Sim" if s.ativo else "Nao"))
+            self.tabela.setItem(linha, 4, QtWidgets.QTableWidgetItem("Sim" if s.ativo else "Não"))
 
     def _incluir(self) -> None:
         if self._offline():
@@ -123,7 +124,7 @@ class TelaCadastroServico(QtWidgets.QWidget):
             try:
                 self._repo.inserir(dlg.servico)
             except Exception as exc:  # noqa: BLE001
-                QtWidgets.QMessageBox.critical(self, "Incluir servico", f"Falha ao gravar:\n{exc}")
+                QtWidgets.QMessageBox.critical(self, "Incluir serviço", f"Falha ao gravar:\n{exc}")
                 return
             self._pesquisar()
 
@@ -132,14 +133,14 @@ class TelaCadastroServico(QtWidgets.QWidget):
             return
         s = self._servico_selecionado()
         if s is None:
-            QtWidgets.QMessageBox.information(self, "Editar", "Selecione um servico na lista.")
+            QtWidgets.QMessageBox.information(self, "Editar", "Selecione um serviço na lista.")
             return
         dlg = ServicoDialog(s, self)
         if dlg.exec():
             try:
                 self._repo.atualizar(dlg.servico)
             except Exception as exc:  # noqa: BLE001
-                QtWidgets.QMessageBox.critical(self, "Editar servico", f"Falha ao gravar:\n{exc}")
+                QtWidgets.QMessageBox.critical(self, "Editar serviço", f"Falha ao gravar:\n{exc}")
                 return
             self._pesquisar()
 
@@ -148,16 +149,17 @@ class TelaCadastroServico(QtWidgets.QWidget):
             return
         s = self._servico_selecionado()
         if s is None or s.cod_servico is None:
-            QtWidgets.QMessageBox.information(self, "Inativar", "Selecione um servico na lista.")
+            QtWidgets.QMessageBox.information(self, "Inativar", "Selecione um serviço na lista.")
             return
         resp = QtWidgets.QMessageBox.question(
-            self, "Inativar servico", f"Inativar o servico '{s.descricao}'?"
+            self, "Inativar serviço", f"Inativar o serviço '{s.descricao}'?"
         )
         if resp != QtWidgets.QMessageBox.StandardButton.Yes:
             return
         try:
             self._repo.inativar(s.cod_servico)
         except Exception as exc:  # noqa: BLE001
-            QtWidgets.QMessageBox.critical(self, "Inativar servico", f"Falha:\n{exc}")
+            QtWidgets.QMessageBox.critical(self, "Inativar serviço", f"Falha:\n{exc}")
             return
         self._pesquisar()
+

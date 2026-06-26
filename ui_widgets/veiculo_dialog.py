@@ -22,7 +22,7 @@ class VeiculoDialog(QtWidgets.QDialog):
         if self._veiculo.cod_cli is None and cod_cli is not None:
             self._veiculo.cod_cli = cod_cli
         editando = veiculo is not None and veiculo.cod_veiculo is not None
-        self.setWindowTitle("Editar veiculo" if editando else "Cadastrar veiculo")
+        self.setWindowTitle("Editar veículo" if editando else "Cadastrar veículo")
         self.resize(520, 0)
         self._montar_ui()
         self._carregar(self._veiculo)
@@ -33,7 +33,7 @@ class VeiculoDialog(QtWidgets.QDialog):
         form.setLabelAlignment(QtCore.Qt.AlignmentFlag.AlignRight)
 
         self.lbl_codigo = QtWidgets.QLabel("(novo)")
-        form.addRow("Codigo:", self.lbl_codigo)
+        form.addRow("Código:", self.lbl_codigo)
 
         # Placa + botao de busca por placa
         linha_placa = QtWidgets.QHBoxLayout()
@@ -48,7 +48,7 @@ class VeiculoDialog(QtWidgets.QDialog):
         self.spin_codcli = QtWidgets.QSpinBox()
         self.spin_codcli.setRange(0, 99999999)
         self.spin_codcli.setSpecialValueText("(nenhum)")
-        form.addRow("Cod. cliente:", self.spin_codcli)
+        form.addRow("Cód. cliente:", self.spin_codcli)
 
         self.txt_modelo = QtWidgets.QLineEdit()
         self.txt_modelo.setMaxLength(60)
@@ -65,7 +65,7 @@ class VeiculoDialog(QtWidgets.QDialog):
 
         self.txt_combustivel = QtWidgets.QLineEdit()
         self.txt_combustivel.setMaxLength(20)
-        form.addRow("Combustivel:", self.txt_combustivel)
+        form.addRow("Combustível:", self.txt_combustivel)
 
         self.txt_motor = QtWidgets.QLineEdit()
         self.txt_motor.setMaxLength(30)
@@ -85,7 +85,7 @@ class VeiculoDialog(QtWidgets.QDialog):
 
         self.txt_obs = QtWidgets.QPlainTextEdit()
         self.txt_obs.setFixedHeight(64)
-        form.addRow("Observacoes:", self.txt_obs)
+        form.addRow("Observações:", self.txt_obs)
 
         layout.addLayout(form)
 
@@ -124,7 +124,7 @@ class VeiculoDialog(QtWidgets.QDialog):
             QtWidgets.QMessageBox.warning(self, "Buscar placa", f"Falha ao buscar:\n{exc}")
             return
         if encontrado is None:
-            QtWidgets.QMessageBox.information(self, "Buscar placa", "Veiculo nao encontrado.")
+            QtWidgets.QMessageBox.information(self, "Buscar placa", "Veículo não encontrado.")
             return
         self._veiculo = encontrado
         self._carregar(encontrado)
@@ -147,3 +147,4 @@ class VeiculoDialog(QtWidgets.QDialog):
     @property
     def veiculo(self) -> Veiculo:
         return self._veiculo
+

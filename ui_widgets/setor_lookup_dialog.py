@@ -1,20 +1,18 @@
-"""Dialog de busca/selecao de produto-serviço em PCPRODUT (Opcao A)."""
+"""Dialog de busca/selecao de setor em PCSETOR."""
 from __future__ import annotations
 
 from PyQt6 import QtCore, QtWidgets
 
-from core.servico_repo import ServicoRepo
+from core.setor_repo import SetorRepo
 from ui_widgets.theme import configurar_grid
 
 
-class ProdutoLookupDialog(QtWidgets.QDialog):
-    """Permite pesquisar um produto no Winthor e devolver (cod_prod, descricao)."""
-
+class SetorLookupDialog(QtWidgets.QDialog):
     def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
         super().__init__(parent)
-        self.setWindowTitle("Localizar produto / serviço")
-        self.resize(560, 420)
-        self._repo = ServicoRepo()
+        self.setWindowTitle("Localizar setor")
+        self.resize(520, 380)
+        self._repo = SetorRepo()
         self._selecionado: dict | None = None
         self._montar_ui()
 
@@ -23,7 +21,7 @@ class ProdutoLookupDialog(QtWidgets.QDialog):
 
         linha = QtWidgets.QHBoxLayout()
         self.txt_busca = QtWidgets.QLineEdit()
-        self.txt_busca.setPlaceholderText("Código ou descrição do produto...")
+        self.txt_busca.setPlaceholderText("Código ou nome do setor...")
         self.txt_busca.returnPressed.connect(self._pesquisar)
         btn = QtWidgets.QPushButton("Pesquisar")
         btn.clicked.connect(self._pesquisar)
@@ -33,8 +31,8 @@ class ProdutoLookupDialog(QtWidgets.QDialog):
 
         self.tabela = QtWidgets.QTableWidget(0, 2)
         configurar_grid(self.tabela)
-        self.tabela.setHorizontalHeaderLabels(["Código", "Descrição"])
-        self.tabela.horizontalHeader().setStretchLastSection(True)
+        self.tabela.setHorizontalHeaderLabels(["Código", "Setor"])
+        self.tabela.horizontalHeader().setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeMode.Stretch)
         self.tabela.setEditTriggers(QtWidgets.QAbstractItemView.EditTrigger.NoEditTriggers)
         self.tabela.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectionBehavior.SelectRows)
         self.tabela.setSelectionMode(QtWidgets.QAbstractItemView.SelectionMode.SingleSelection)
@@ -50,25 +48,25 @@ class ProdutoLookupDialog(QtWidgets.QDialog):
 
     def _pesquisar(self) -> None:
         try:
-            resultados = self._repo.buscar_produto_servico(self.txt_busca.text())
+            resultados = self._repo.buscar(self.txt_busca.text())
         except Exception as exc:  # noqa: BLE001
-            QtWidgets.QMessageBox.warning(self, "Busca de produto", f"Falha ao buscar:\n{exc}")
+            QtWidgets.QMessageBox.warning(self, "Busca de setor", f"Falha ao buscar:\n{exc}")
             return
         self.tabela.setRowCount(0)
         for item in resultados:
             linha = self.tabela.rowCount()
             self.tabela.insertRow(linha)
-            it_cod = QtWidgets.QTableWidgetItem(str(item["cod_prod"]))
-            it_cod.setData(QtCore.Qt.ItemDataRole.UserRole, item)
-            self.tabela.setItem(linha, 0, it_cod)
-            self.tabela.setItem(linha, 1, QtWidgets.QTableWidgetItem(item["descricao"] or ""))
+            cod = QtWidgets.QTableWidgetItem(str(item["cod_setor"]))
+            cod.setData(QtCore.Qt.ItemDataRole.UserRole, item)
+            self.tabela.setItem(linha, 0, cod)
+            self.tabela.setItem(linha, 1, QtWidgets.QTableWidgetItem(item["nome"] or ""))
         if not resultados:
-            QtWidgets.QMessageBox.information(self, "Busca de produto", "Nenhum produto encontrado.")
+            QtWidgets.QMessageBox.information(self, "Busca de setor", "Nenhum setor encontrado.")
 
     def _confirmar(self) -> None:
         linha = self.tabela.currentRow()
         if linha < 0:
-            QtWidgets.QMessageBox.information(self, "Seleção", "Selecione um produto na lista.")
+            QtWidgets.QMessageBox.information(self, "Seleção", "Selecione um setor na lista.")
             return
         self._selecionado = self.tabela.item(linha, 0).data(QtCore.Qt.ItemDataRole.UserRole)
         self.accept()

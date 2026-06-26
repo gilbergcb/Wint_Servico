@@ -14,6 +14,7 @@ from PyQt6 import QtCore, QtWidgets
 
 from core.conexao_oracle import ConexaoOracle
 from core.relatorio_repo import RelatorioRepo
+from ui_widgets.theme import configurar_combo, configurar_grid
 from ui_widgets.theme import marcar_botao
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -21,9 +22,9 @@ OUTPUTS = ROOT / "outputs"
 
 # (rotulo, nome do metodo em RelatorioRepo)
 _RELATORIOS = [
-    ("O.S. por situacao", "os_por_situacao"),
-    ("Comissoes por tecnico", "comissoes_por_tecnico"),
-    ("Servicos mais executados", "servicos_mais_executados"),
+    ("O.S. por situação", "os_por_situacao"),
+    ("Comissões por técnico", "comissoes_por_tecnico"),
+    ("Serviços mais executados", "servicos_mais_executados"),
 ]
 
 
@@ -41,15 +42,16 @@ class TelaRelatorios(QtWidgets.QWidget):
         layout.setContentsMargins(20, 18, 20, 18)
         layout.setSpacing(10)
 
-        titulo = QtWidgets.QLabel("Relatorios")
+        titulo = QtWidgets.QLabel("Relatórios")
         titulo.setObjectName("telaTitulo")
         layout.addWidget(titulo)
 
         filtros = QtWidgets.QHBoxLayout()
         self.cmb_relatorio = QtWidgets.QComboBox()
+        configurar_combo(self.cmb_relatorio)
         for rotulo, metodo in _RELATORIOS:
             self.cmb_relatorio.addItem(rotulo, metodo)
-        self.chk_periodo = QtWidgets.QCheckBox("Periodo")
+        self.chk_periodo = QtWidgets.QCheckBox("Período")
         self.chk_periodo.setChecked(True)
         self.dt_ini = QtWidgets.QDateEdit(calendarPopup=True)
         self.dt_ini.setDisplayFormat("dd/MM/yyyy")
@@ -61,7 +63,7 @@ class TelaRelatorios(QtWidgets.QWidget):
         marcar_botao(btn_gerar, "primary")
         btn_gerar.clicked.connect(self._gerar)
 
-        filtros.addWidget(QtWidgets.QLabel("Relatorio:"))
+        filtros.addWidget(QtWidgets.QLabel("Relatório:"))
         filtros.addWidget(self.cmb_relatorio, 1)
         filtros.addWidget(self.chk_periodo)
         filtros.addWidget(self.dt_ini)
@@ -71,6 +73,7 @@ class TelaRelatorios(QtWidgets.QWidget):
         layout.addLayout(filtros)
 
         self.tabela = QtWidgets.QTableWidget(0, 0)
+        configurar_grid(self.tabela)
         self.tabela.setEditTriggers(QtWidgets.QAbstractItemView.EditTrigger.NoEditTriggers)
         self.tabela.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectionBehavior.SelectRows)
         layout.addWidget(self.tabela, 1)
@@ -88,7 +91,7 @@ class TelaRelatorios(QtWidgets.QWidget):
     # ----------------------------------------------------------------- helpers
     def _offline(self) -> bool:
         if ConexaoOracle.instance().offline:
-            self.lbl_status.setText("Sem conexao com o banco (modo dev). Operacoes indisponiveis.")
+            self.lbl_status.setText("Sem conexão com o banco (modo dev). Operações indisponíveis.")
             return True
         return False
 
@@ -109,7 +112,7 @@ class TelaRelatorios(QtWidgets.QWidget):
         try:
             self._cabecalho, self._linhas = metodo(dt_ini, dt_fim)
         except Exception as exc:  # noqa: BLE001
-            QtWidgets.QMessageBox.warning(self, "Relatorios", f"Falha ao gerar:\n{exc}")
+            QtWidgets.QMessageBox.warning(self, "Relatórios", f"Falha ao gerar:\n{exc}")
             return
         self._preencher()
         self.btn_export.setEnabled(bool(self._linhas))
@@ -125,7 +128,7 @@ class TelaRelatorios(QtWidgets.QWidget):
             self.tabela.insertRow(linha)
             for col, valor in enumerate(valores):
                 item = QtWidgets.QTableWidgetItem(str(valor))
-                if isinstance(valor, (int,)) or (isinstance(valor, str) and self._cabecalho[col] in ("Vl Total", "Comissao")):
+                if isinstance(valor, (int,)) or (isinstance(valor, str) and self._cabecalho[col] in ("Vl Total", "Comissão")):
                     item.setTextAlignment(
                         QtCore.Qt.AlignmentFlag.AlignRight | QtCore.Qt.AlignmentFlag.AlignVCenter
                     )
@@ -151,3 +154,4 @@ class TelaRelatorios(QtWidgets.QWidget):
             QtWidgets.QMessageBox.critical(self, "Exportar", f"Falha ao exportar:\n{exc}")
             return
         QtWidgets.QMessageBox.information(self, "Exportar", f"Exportado para:\n{caminho}")
+

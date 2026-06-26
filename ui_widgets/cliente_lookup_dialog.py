@@ -4,6 +4,7 @@ from __future__ import annotations
 from PyQt6 import QtCore, QtWidgets
 
 from core.cliente_repo import ClienteRepo
+from ui_widgets.theme import configurar_grid
 
 
 class ClienteLookupDialog(QtWidgets.QDialog):
@@ -22,7 +23,7 @@ class ClienteLookupDialog(QtWidgets.QDialog):
 
         linha = QtWidgets.QHBoxLayout()
         self.txt_busca = QtWidgets.QLineEdit()
-        self.txt_busca.setPlaceholderText("Codigo ou nome do cliente...")
+        self.txt_busca.setPlaceholderText("Código ou nome do cliente...")
         self.txt_busca.returnPressed.connect(self._pesquisar)
         btn = QtWidgets.QPushButton("Pesquisar")
         btn.clicked.connect(self._pesquisar)
@@ -31,7 +32,8 @@ class ClienteLookupDialog(QtWidgets.QDialog):
         layout.addLayout(linha)
 
         self.tabela = QtWidgets.QTableWidget(0, 3)
-        self.tabela.setHorizontalHeaderLabels(["Codigo", "Nome", "CNPJ/CPF"])
+        configurar_grid(self.tabela)
+        self.tabela.setHorizontalHeaderLabels(["Código", "Nome", "CNPJ/CPF"])
         self.tabela.horizontalHeader().setSectionResizeMode(
             1, QtWidgets.QHeaderView.ResizeMode.Stretch
         )
@@ -69,7 +71,7 @@ class ClienteLookupDialog(QtWidgets.QDialog):
     def _confirmar(self) -> None:
         linha = self.tabela.currentRow()
         if linha < 0:
-            QtWidgets.QMessageBox.information(self, "Selecao", "Selecione um cliente na lista.")
+            QtWidgets.QMessageBox.information(self, "Seleção", "Selecione um cliente na lista.")
             return
         self._selecionado = self.tabela.item(linha, 0).data(QtCore.Qt.ItemDataRole.UserRole)
         self.accept()
@@ -77,3 +79,4 @@ class ClienteLookupDialog(QtWidgets.QDialog):
     @property
     def selecionado(self) -> dict | None:
         return self._selecionado
+

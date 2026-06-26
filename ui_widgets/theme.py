@@ -61,20 +61,122 @@ def marcar_botao(botao: QtWidgets.QPushButton, variante: str) -> None:
     botao.style().polish(botao)
 
 
+def configurar_grid(tabela: QtWidgets.QTableWidget) -> None:
+    tabela.verticalHeader().setVisible(False)
+    tabela.setAlternatingRowColors(True)
+    tabela.setShowGrid(False)
+    tabela.setWordWrap(False)
+    tabela.setFocusPolicy(QtCore.Qt.FocusPolicy.NoFocus)
+    tabela.verticalHeader().setDefaultSectionSize(46)
+    tabela.horizontalHeader().setMinimumHeight(40)
+
+
+class _ComboPopupCompacto(QtWidgets.QProxyStyle):
+    def styleHint(self, hint, option=None, widget=None, returnData=None):  # noqa: ANN001, N802
+        if hint == QtWidgets.QStyle.StyleHint.SH_ComboBox_Popup:
+            return 0
+        return super().styleHint(hint, option, widget, returnData)
+
+
+def configurar_combo(
+    combo: QtWidgets.QComboBox,
+    destaque: bool = False,
+    itens_visiveis: int = 9,
+) -> None:
+    if not combo.objectName():
+        combo.setObjectName("filtroEscolha")
+    if destaque:
+        combo.setObjectName("periodoFiltro")
+    combo.setMaxVisibleItems(itens_visiveis)
+    combo.setStyle(_ComboPopupCompacto(combo.style()))
+    combo._popup_compacto_style = combo.style()  # type: ignore[attr-defined]
+    view = combo.view()
+    view.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+    view.setMaximumHeight((itens_visiveis * 26) + 10)
+    combo.setCursor(QtCore.Qt.CursorShape.PointingHandCursor)
+
+
+def configurar_botao_busca(botao: QtWidgets.QAbstractButton) -> None:
+    from ui_widgets import icones
+
+    botao.setObjectName("lookupButton")
+    botao.setText("")
+    botao.setIcon(icones.icone("buscar", "#1f2937", 24))
+    botao.setIconSize(QtCore.QSize(20, 20))
+    botao.setFixedSize(34, 34)
+    botao.setCursor(QtCore.Qt.CursorShape.PointingHandCursor)
+
+
+def configurar_descricao_lookup(label: QtWidgets.QLabel) -> None:
+    label.setObjectName("lookupDescricao")
+    label.setMinimumHeight(34)
+    label.setIndent(10)
+
+
+def rotulo_campo(texto: str) -> QtWidgets.QLabel:
+    label = QtWidgets.QLabel(texto.upper())
+    label.setObjectName("fieldLabel")
+    return label
+
+
+class StatusBadgeDelegate(QtWidgets.QStyledItemDelegate):
+    """Desenha um badge arredondado dentro da celula de status."""
+
+    def paint(
+        self,
+        painter: QtGui.QPainter,
+        option: QtWidgets.QStyleOptionViewItem,
+        index: QtCore.QModelIndex,
+    ) -> None:
+        badge = index.data(QtCore.Qt.ItemDataRole.UserRole)
+        if not badge:
+            super().paint(painter, option, index)
+            return
+
+        opt = QtWidgets.QStyleOptionViewItem(option)
+        self.initStyleOption(opt, index)
+        texto = opt.text
+        fundo, cor_texto = badge
+        opt.text = ""
+
+        painter.save()
+        style = opt.widget.style() if opt.widget else QtWidgets.QApplication.style()
+        style.drawControl(QtWidgets.QStyle.ControlElement.CE_ItemViewItem, opt, painter, opt.widget)
+
+        largura = min(opt.rect.width() - 18, max(112, opt.fontMetrics.horizontalAdvance(texto) + 44))
+        altura = min(28, opt.rect.height() - 12)
+        badge_rect = QtCore.QRect(
+            opt.rect.x() + (opt.rect.width() - largura) // 2,
+            opt.rect.y() + (opt.rect.height() - altura) // 2,
+            largura,
+            altura,
+        )
+        painter.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing, True)
+        painter.setPen(QtCore.Qt.PenStyle.NoPen)
+        painter.setBrush(QtGui.QColor(fundo))
+        painter.drawRoundedRect(badge_rect, altura / 2, altura / 2)
+        painter.setPen(QtGui.QColor(cor_texto))
+        fonte = QtGui.QFont(opt.font)
+        fonte.setBold(True)
+        painter.setFont(fonte)
+        painter.drawText(badge_rect, QtCore.Qt.AlignmentFlag.AlignCenter, texto)
+        painter.restore()
+
+
 STYLESHEET = """
 QWidget {
     color: #1f2937;
-    background: #f4f7fb;
+    background: #ffffff;
     font-family: "Segoe UI";
     font-size: 9pt;
 }
 
 QMainWindow, QDialog {
-    background: #f4f7fb;
+    background: #ffffff;
 }
 
 QWidget#mainShell {
-    background: #f4f7fb;
+    background: #ffffff;
 }
 
 QFrame#sideMenu {
@@ -84,8 +186,90 @@ QFrame#sideMenu {
 
 QFrame#kpiCard {
     background: #ffffff;
-    border: 1px solid #d8e0ea;
-    border-radius: 10px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+}
+
+QFrame#kpiCard[segment="first"] {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+QFrame#kpiCard[segment="middle"] {
+    border-radius: 0;
+    border-left: none;
+}
+
+QFrame#kpiCard[segment="last"] {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    border-left: none;
+}
+
+QFrame#kpiCard[clickable="true"] {
+    cursor: pointer;
+}
+
+QFrame#kpiCard[active="true"][statusColor="blue"] {
+    background: #0d7be8;
+    border-color: #0d7be8;
+}
+
+QFrame#kpiCard[active="true"][statusColor="orange"] {
+    background: #ff980f;
+    border-color: #ff980f;
+}
+
+QFrame#kpiCard[active="true"][statusColor="yellow"] {
+    background: #facc15;
+    border-color: #facc15;
+}
+
+QFrame#kpiCard[active="true"][statusColor="red"] {
+    background: #ef4444;
+    border-color: #ef4444;
+}
+
+QFrame#kpiCard[active="true"][statusColor="light_green"] {
+    background: #86efac;
+    border-color: #86efac;
+}
+
+QFrame#kpiCard[active="true"][statusColor="dark_green"] {
+    background: #15803d;
+    border-color: #15803d;
+}
+
+QLabel#statusDot {
+    min-width: 10px;
+    max-width: 10px;
+    min-height: 10px;
+    max-height: 10px;
+    border-radius: 5px;
+}
+
+QLabel#statusDot[statusColor="blue"] {
+    background: #0d7be8;
+}
+
+QLabel#statusDot[statusColor="orange"] {
+    background: #ff980f;
+}
+
+QLabel#statusDot[statusColor="yellow"] {
+    background: #facc15;
+}
+
+QLabel#statusDot[statusColor="red"] {
+    background: #ef4444;
+}
+
+QLabel#statusDot[statusColor="light_green"] {
+    background: #86efac;
+}
+
+QLabel#statusDot[statusColor="dark_green"] {
+    background: #15803d;
 }
 
 QStatusBar {
@@ -95,7 +279,7 @@ QStatusBar {
 }
 
 QLabel#telaTitulo {
-    color: #0f172a;
+    color: #020617;
     font-size: 15pt;
     font-weight: 700;
 }
@@ -107,15 +291,182 @@ QLabel#telaSubtitulo {
 
 QLabel {
     background: transparent;
-    color: #334155;
+    color: #111827;
+}
+
+QFrame#kpiCard[active="true"] QLabel,
+QFrame#kpiCard[active="true"] QLabel#telaTitulo,
+QFrame#kpiCard[active="true"] QLabel#telaSubtitulo {
+    color: #ffffff;
+}
+
+QFrame#kpiCard[active="true"] QLabel#statusDot {
+    background: transparent;
+    border: 3px solid #ffffff;
+    color: transparent;
+}
+
+QLabel[activeCard="true"],
+QLabel#telaTitulo[activeCard="true"],
+QLabel#telaSubtitulo[activeCard="true"] {
+    color: #ffffff;
+}
+
+QLabel#statusDot[activeCard="true"] {
+    background: transparent;
+    border: 3px solid #ffffff;
+    color: transparent;
+}
+
+QGroupBox {
+    background: #f3f4f6;
+    border: 1px solid #d1d5db;
+    border-radius: 7px;
+    margin-top: 14px;
+    padding: 14px 12px 10px 12px;
+    font-weight: 600;
+}
+
+QGroupBox::title {
+    subcontrol-origin: margin;
+    subcontrol-position: top left;
+    left: 14px;
+    top: 5px;
+    padding: 2px 8px;
+    background: #f3f4f6;
+    color: #020617;
+    font-weight: 700;
+}
+
+QLineEdit, QPlainTextEdit, QSpinBox, QDoubleSpinBox, QDateEdit, QDateTimeEdit, QComboBox {
+    min-height: 34px;
+    border: 1px solid #bfd0e4;
+    border-radius: 6px;
+    padding: 0 10px;
+    background: #f9fbfe;
+    color: #020617;
+    selection-background-color: #0ea5e9;
+    selection-color: #ffffff;
+}
+
+QLineEdit:focus, QPlainTextEdit:focus, QSpinBox:focus, QDoubleSpinBox:focus,
+QDateEdit:focus, QDateTimeEdit:focus, QComboBox:focus {
+    border-color: #0ea5e9;
+    background: #ffffff;
+}
+
+QLineEdit:disabled, QSpinBox:disabled, QDoubleSpinBox:disabled,
+QDateEdit:disabled, QDateTimeEdit:disabled, QComboBox:disabled {
+    background: #f3f6fa;
+    color: #8b97a8;
+    border-color: #d1dbe8;
+}
+
+QComboBox::drop-down, QDateEdit::drop-down, QDateTimeEdit::drop-down {
+    border: none;
+    width: 34px;
+    subcontrol-origin: padding;
+    subcontrol-position: top right;
+}
+
+QSpinBox::up-button, QDoubleSpinBox::up-button,
+QSpinBox::down-button, QDoubleSpinBox::down-button {
+    border: none;
+    width: 24px;
+}
+
+QComboBox#filtroEscolha, QComboBox#periodoFiltro {
+    min-height: 34px;
+    border: 1px solid #0ea5e9;
+    border-radius: 6px;
+    padding: 0 36px 0 12px;
+    background: #f9fbfe;
+    color: #020617;
+    font-size: 9pt;
+}
+
+QComboBox#periodoFiltro {
+    min-height: 38px;
+    background: #ffffff;
+    font-size: 10pt;
+}
+
+QComboBox#filtroEscolha:hover, QComboBox#periodoFiltro:hover {
+    background: #ffffff;
+    border-color: #0284c7;
+}
+
+QComboBox#filtroEscolha:focus, QComboBox#periodoFiltro:focus {
+    border-color: #0284c7;
+}
+
+QComboBox#filtroEscolha::drop-down, QComboBox#periodoFiltro::drop-down {
+    width: 34px;
+    border: none;
+    subcontrol-origin: padding;
+    subcontrol-position: top right;
+}
+
+QComboBox#filtroEscolha QAbstractItemView, QComboBox#periodoFiltro QAbstractItemView {
+    border: 1px solid #cbd5e1;
+    border-radius: 4px;
+    background: #ffffff;
+    color: #111827;
+    padding: 3px 0;
+    outline: 0;
+    selection-background-color: #dbeafe;
+    selection-color: #020617;
+    show-decoration-selected: 1;
+}
+
+QComboBox#filtroEscolha QAbstractItemView::item, QComboBox#periodoFiltro QAbstractItemView::item {
+    min-height: 22px;
+    padding: 2px 8px;
+}
+
+QComboBox#filtroEscolha QAbstractItemView::item:selected,
+QComboBox#periodoFiltro QAbstractItemView::item:selected {
+    background: #dbeafe;
+    color: #020617;
+}
+
+QPushButton#lookupButton, QToolButton#lookupButton {
+    min-width: 34px;
+    max-width: 34px;
+    min-height: 34px;
+    max-height: 34px;
+    padding: 0;
+    border: 1px solid #bfd0e4;
+    border-radius: 6px;
+    background: #f9fbfe;
+}
+
+QPushButton#lookupButton:hover, QToolButton#lookupButton:hover {
+    background: #ffffff;
+    border-color: #0ea5e9;
+}
+
+QLabel#lookupDescricao {
+    min-height: 34px;
+    border: 1px solid #bfd0e4;
+    border-radius: 6px;
+    background: #f3f6fa;
+    color: #475569;
+}
+
+QLabel#fieldLabel {
+    color: #020617;
+    font-size: 8pt;
+    font-weight: 700;
+    background: transparent;
 }
 
 QPushButton {
-    min-height: 26px;
-    padding: 6px 14px;
-    border-radius: 7px;
+    min-height: 30px;
+    padding: 6px 16px;
+    border-radius: 9px;
     border: 1px solid #cbd5e1;
-    background: #ffffff;
+    background: #f8fafc;
     color: #1f2937;
     font-weight: 600;
 }
@@ -168,24 +519,84 @@ QToolButton[variant="nav"]:checked {
 }
 
 QPushButton[variant="seg"] {
-    border-radius: 7px;
-    padding: 5px 14px;
+    border-radius: 18px;
+    padding: 7px 20px;
+    background: #f6f7f9;
+    border-color: #f6f7f9;
 }
 
 QPushButton[variant="seg"]:checked {
-    background: #2563eb;
-    border-color: #2563eb;
+    background: #0ea5e9;
+    border-color: #0ea5e9;
     color: #ffffff;
 }
 
 QPushButton[variant="primary"] {
-    background: #2563eb;
-    border-color: #2563eb;
+    background: #0ea5e9;
+    border-color: #0ea5e9;
     color: #ffffff;
 }
 
 QPushButton[variant="primary"]:hover {
-    background: #1d4ed8;
+    background: #0284c7;
+}
+
+QTabWidget::pane {
+    border: none;
+    border-top: 1px solid #e5e7eb;
+    top: -1px;
+}
+
+QTabBar::tab {
+    min-height: 30px;
+    padding: 7px 20px;
+    margin: 0 2px 8px 0;
+    border-radius: 18px;
+    background: #f6f7f9;
+    color: #111827;
+}
+
+QTabBar::tab:selected {
+    background: #0ea5e9;
+    color: #ffffff;
+}
+
+QTableWidget {
+    background: #ffffff;
+    alternate-background-color: #fafafa;
+    border: 1px solid #e5e7eb;
+    border-radius: 0;
+    selection-background-color: #eeeeee;
+    selection-color: #020617;
+}
+
+QTableWidget::item {
+    padding: 8px 10px;
+    border-bottom: 1px solid #eef0f3;
+}
+
+QTableWidget::item:selected {
+    background: #eeeeee;
+    color: #020617;
+    border-top: 1px dotted #111827;
+    border-bottom: 1px dotted #111827;
+    outline: none;
+}
+
+QTableWidget::item:focus {
+    border-top: 1px dotted #111827;
+    border-bottom: 1px dotted #111827;
+    outline: none;
+}
+
+QHeaderView::section {
+    background: #f8fafc;
+    color: #111827;
+    border: none;
+    border-right: 1px solid #e5e7eb;
+    border-bottom: 1px solid #dbe2ea;
+    padding: 8px 10px;
+    font-weight: 600;
 }
 
 QToolButton#themeToggleButton {

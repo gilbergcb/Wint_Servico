@@ -11,13 +11,13 @@ from .item_servico import ItemServico
 
 
 class SituacaoOS(IntEnum):
-    """Situacoes da Ordem de Servico (PCM_OS.SITUACAO)."""
+    """Situacoes da Ordem de Servico (PCORDEMSERVICO.SITUACAO)."""
 
     ABERTA = 1
     EM_EXECUCAO = 2
-    CONCLUIDA = 3
-    FATURADA = 4
-    CANCELADA = 5
+    CANCELADA = 3
+    CONCLUIDA = 4
+    FATURADA = 5
 
 
 @dataclass
@@ -25,9 +25,12 @@ class OrdemServico:
     num_os: int | None = None             # PCM_OS.NUMOS (PK)
     cod_filial: str = ""
     cod_cli: int | None = None            # FK logica -> PCCLIENT.CODCLI
+    cliente_nome: str | None = None
     cod_rca: int | None = None
     cod_func_abertura: int | None = None  # FK logica -> PCEMPR.MATRICULA
     cod_veiculo: int | None = None        # FK -> PCM_OS_VEICULO.CODVEICULO
+    placa_veiculo: str | None = None
+    descricao_veiculo: str | None = None
     tipo_os: str | None = None
     situacao: SituacaoOS = SituacaoOS.ABERTA
     km: int | None = None

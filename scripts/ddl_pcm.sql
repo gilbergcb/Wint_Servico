@@ -96,7 +96,7 @@ END;
 
 -- ---------------------------------------------------------------------
 -- PCM_OS  -- cabecalho da Ordem de Servico (espelha PCORDEMSERVICO)
--- SITUACAO: 1=Aberta 2=EmExecucao 3=Concluida 4=Faturada 5=Cancelada
+-- SITUACAO: 1=Aberta 2=EmExecucao 3=Cancelada 4=Concluida 5=Faturada
 -- ---------------------------------------------------------------------
 CREATE TABLE PCM_OS (
   NUMOS             NUMBER(10)      NOT NULL,                  -- PK propria

@@ -14,6 +14,7 @@ from core.servico_repo import ServicoRepo
 from core.tecnico_repo import TecnicoRepo
 from modelos.item_servico import ItemServico
 from servicos.calculadora_os import calcular_preco_item
+from ui_widgets.theme import configurar_combo
 
 
 class ItemServicoDialog(QtWidgets.QDialog):
@@ -22,7 +23,7 @@ class ItemServicoDialog(QtWidgets.QDialog):
     def __init__(self, item: ItemServico | None = None, parent: QtWidgets.QWidget | None = None) -> None:
         super().__init__(parent)
         self._item = item or ItemServico()
-        self.setWindowTitle("Editar servico da O.S." if item is not None else "Adicionar servico")
+        self.setWindowTitle("Editar serviço da O.S." if item is not None else "Adicionar serviço")
         self.resize(540, 0)
         self._montar_ui()
         self._carregar_combos()
@@ -35,15 +36,17 @@ class ItemServicoDialog(QtWidgets.QDialog):
         form.setLabelAlignment(QtCore.Qt.AlignmentFlag.AlignRight)
 
         self.cmb_servico = QtWidgets.QComboBox()
+        configurar_combo(self.cmb_servico)
         self.cmb_servico.currentIndexChanged.connect(self._servico_alterado)
-        form.addRow("Servico:", self.cmb_servico)
+        form.addRow("Serviço:", self.cmb_servico)
 
         self.txt_descricao = QtWidgets.QLineEdit()
         self.txt_descricao.setMaxLength(100)
-        form.addRow("Descricao*:", self.txt_descricao)
+        form.addRow("Descrição*:", self.txt_descricao)
 
         self.cmb_tecnico = QtWidgets.QComboBox()
-        form.addRow("Tecnico:", self.cmb_tecnico)
+        configurar_combo(self.cmb_tecnico)
+        form.addRow("Técnico:", self.cmb_tecnico)
 
         self.spin_qtde = QtWidgets.QDoubleSpinBox()
         self.spin_qtde.setRange(0, 9_999_999)
@@ -57,7 +60,7 @@ class ItemServicoDialog(QtWidgets.QDialog):
         self.spin_punit.setDecimals(4)
         self.spin_punit.setPrefix("R$ ")
         self.spin_punit.valueChanged.connect(self._recalcular)
-        form.addRow("Preco unitario:", self.spin_punit)
+        form.addRow("Preço unitário:", self.spin_punit)
 
         self.spin_desconto = QtWidgets.QDoubleSpinBox()
         self.spin_desconto.setRange(0, 9_999_999)
@@ -73,7 +76,7 @@ class ItemServicoDialog(QtWidgets.QDialog):
         self.spin_comissao.setRange(0, 100)
         self.spin_comissao.setDecimals(2)
         self.spin_comissao.setSuffix(" %")
-        form.addRow("% Comissao:", self.spin_comissao)
+        form.addRow("% Comissão:", self.spin_comissao)
 
         self.chk_reteriss = QtWidgets.QCheckBox("Reter ISS")
         form.addRow("", self.chk_reteriss)
@@ -82,7 +85,7 @@ class ItemServicoDialog(QtWidgets.QDialog):
         self.spin_aliqiss.setRange(0, 100)
         self.spin_aliqiss.setDecimals(2)
         self.spin_aliqiss.setSuffix(" %")
-        form.addRow("Aliquota ISS retida:", self.spin_aliqiss)
+        form.addRow("Alíquota ISS retida:", self.spin_aliqiss)
 
         self.dt_inicio = QtWidgets.QDateTimeEdit()
         self.dt_inicio.setCalendarPopup(True)
@@ -91,7 +94,7 @@ class ItemServicoDialog(QtWidgets.QDialog):
         linha_ini = QtWidgets.QHBoxLayout()
         linha_ini.addWidget(self.dt_inicio, 1)
         linha_ini.addWidget(self.chk_inicio)
-        form.addRow("Dt inicio:", linha_ini)
+        form.addRow("Dt início:", linha_ini)
 
         self.dt_final = QtWidgets.QDateTimeEdit()
         self.dt_final.setCalendarPopup(True)
@@ -104,7 +107,7 @@ class ItemServicoDialog(QtWidgets.QDialog):
 
         self.txt_titulo = QtWidgets.QLineEdit()
         self.txt_titulo.setMaxLength(100)
-        form.addRow("Titulo levantamento:", self.txt_titulo)
+        form.addRow("Título levantamento:", self.txt_titulo)
 
         self.txt_detalhe = QtWidgets.QPlainTextEdit()
         self.txt_detalhe.setFixedHeight(64)
@@ -122,15 +125,15 @@ class ItemServicoDialog(QtWidgets.QDialog):
         layout.addWidget(botoes)
 
     def _carregar_combos(self) -> None:
-        # Catalogo de servicos (offline-seguro)
-        self.cmb_servico.addItem("(livre / sem catalogo)", None)
+        # Catálogo de serviços (offline-seguro)
+        self.cmb_servico.addItem("(livre / sem catálogo)", None)
         try:
             for s in ServicoRepo().listar(ativo=True):
                 self.cmb_servico.addItem(f"{s.cod_servico} - {s.descricao}", s)
         except Exception:  # noqa: BLE001
-            pass  # offline ou falha: combo so com a opcao livre
+            pass  # offline ou falha: combo só com a opção livre
 
-        # Tecnicos ativos (offline-seguro)
+        # Técnicos ativos (offline-seguro)
         self.cmb_tecnico.addItem("(nenhum)", None)
         try:
             for t in TecnicoRepo().listar_ativos():
@@ -152,7 +155,7 @@ class ItemServicoDialog(QtWidgets.QDialog):
         self._recalcular()
 
     def _carregar(self, item: ItemServico) -> None:
-        # selecionar servico do catalogo se aplicavel
+        # selecionar serviço do catálogo se aplicável
         if item.cod_servico is not None:
             for i in range(self.cmb_servico.count()):
                 dado = self.cmb_servico.itemData(i)
@@ -194,7 +197,7 @@ class ItemServicoDialog(QtWidgets.QDialog):
     def _confirmar(self) -> None:
         descricao = self.txt_descricao.text().strip()
         if not descricao:
-            QtWidgets.QMessageBox.warning(self, "Validacao", "Informe a descricao do servico.")
+            QtWidgets.QMessageBox.warning(self, "Validação", "Informe a descrição do serviço.")
             self.txt_descricao.setFocus()
             return
 
@@ -221,3 +224,4 @@ class ItemServicoDialog(QtWidgets.QDialog):
     @property
     def item(self) -> ItemServico:
         return self._item
+

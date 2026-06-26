@@ -8,6 +8,7 @@ from __future__ import annotations
 from PyQt6 import QtCore, QtWidgets
 
 from core.pedido_repo import PedidoRepo
+from ui_widgets.theme import configurar_grid
 
 
 class PedidoLookupDialog(QtWidgets.QDialog):
@@ -26,7 +27,7 @@ class PedidoLookupDialog(QtWidgets.QDialog):
     def _montar_ui(self) -> None:
         layout = QtWidgets.QVBoxLayout(self)
 
-        info = QtWidgets.QLabel(f"Pedidos nao cancelados do cliente {self._cod_cli}")
+        info = QtWidgets.QLabel(f"Pedidos não cancelados do cliente {self._cod_cli}")
         info.setObjectName("telaSubtitulo")
         layout.addWidget(info)
 
@@ -42,13 +43,14 @@ class PedidoLookupDialog(QtWidgets.QDialog):
         btn.clicked.connect(self._pesquisar)
         linha.addWidget(QtWidgets.QLabel("De:"))
         linha.addWidget(self.dt_ini)
-        linha.addWidget(QtWidgets.QLabel("Ate:"))
+        linha.addWidget(QtWidgets.QLabel("Até:"))
         linha.addWidget(self.dt_fim)
         linha.addStretch(1)
         linha.addWidget(btn)
         layout.addLayout(linha)
 
         self.tabela = QtWidgets.QTableWidget(0, 3)
+        configurar_grid(self.tabela)
         self.tabela.setHorizontalHeaderLabels(["Pedido", "Data", "Vl Total"])
         self.tabela.horizontalHeader().setSectionResizeMode(
             1, QtWidgets.QHeaderView.ResizeMode.Stretch
@@ -89,13 +91,13 @@ class PedidoLookupDialog(QtWidgets.QDialog):
             self.tabela.setItem(linha, 2, QtWidgets.QTableWidgetItem(f"{float(vl):,.2f}"))
         if not resultados:
             QtWidgets.QMessageBox.information(
-                self, "Busca de pedido", "Nenhum pedido valido encontrado no periodo."
+                self, "Busca de pedido", "Nenhum pedido válido encontrado no período."
             )
 
     def _confirmar(self) -> None:
         linha = self.tabela.currentRow()
         if linha < 0:
-            QtWidgets.QMessageBox.information(self, "Selecao", "Selecione um pedido na lista.")
+            QtWidgets.QMessageBox.information(self, "Seleção", "Selecione um pedido na lista.")
             return
         self._selecionado = self.tabela.item(linha, 0).data(QtCore.Qt.ItemDataRole.UserRole)
         self.accept()
@@ -103,3 +105,4 @@ class PedidoLookupDialog(QtWidgets.QDialog):
     @property
     def selecionado(self) -> dict | None:
         return self._selecionado
+

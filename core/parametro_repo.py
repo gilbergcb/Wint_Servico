@@ -17,6 +17,7 @@ from core.sqlutil import colmap
 CHAVE_TIPO_FATURAMENTO = "TIPO_FATURAMENTO"
 CHAVE_PEDIDO_OBRIGATORIO = "PEDIDO_OBRIGATORIO"
 CHAVE_MODO_OPERACAO = "MODO_OPERACAO"
+CHAVE_SETOR_TECNICOS = "SETOR_TECNICOS"
 
 # valores de TIPO_FATURAMENTO
 FATURAMENTO_INTERNO = "INTERNO"   # grava em PCM_OS_FATURA (tabela propria)
@@ -39,6 +40,7 @@ _DESCRICOES = {
     CHAVE_TIPO_FATURAMENTO: "Tipo de faturamento da O.S. (INTERNO|WINTHOR)",
     CHAVE_PEDIDO_OBRIGATORIO: "Exige pedido de venda do Winthor na O.S. (S|N)",
     CHAVE_MODO_OPERACAO: "Perfil de persistencia: PCM (tabelas proprias) ou WINTHOR (modulo 35)",
+    CHAVE_SETOR_TECNICOS: "Codigo do setor de tecnicos em PCEMPR.CODSETOR",
 }
 
 
@@ -93,3 +95,14 @@ class ParametroRepo:
         """
         valor = self.obter(CHAVE_MODO_OPERACAO, MODO_OPERACAO_PADRAO)
         return valor if valor in (MODO_PCM, MODO_WINTHOR) else MODO_OPERACAO_PADRAO
+
+    def setor_tecnicos(self) -> int | None:
+        """Codigo de PCEMPR.CODSETOR usado para filtrar tecnicos."""
+        valor = (self.obter(CHAVE_SETOR_TECNICOS, "") or "").strip()
+        if not valor:
+            return None
+        try:
+            codigo = int(valor)
+        except ValueError:
+            return None
+        return codigo if codigo > 0 else None

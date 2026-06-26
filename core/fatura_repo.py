@@ -1,6 +1,6 @@
 """Repositorio de faturamento proprio da O.S. (tabela PCM_OS_FATURA).
 
-A gravacao da fatura e a mudanca de situacao da O.S. para Faturada (4) ocorrem
+A gravacao da fatura e a mudanca de situacao da O.S. para Faturada (5) ocorrem
 na MESMA transacao (atomico). Nao toca tabelas nativas (PCMOV/PCPREST).
 """
 from __future__ import annotations

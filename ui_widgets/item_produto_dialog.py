@@ -45,7 +45,7 @@ class ItemProdutoDialog(QtWidgets.QDialog):
 
         self.txt_descricao = QtWidgets.QLineEdit()
         self.txt_descricao.setMaxLength(100)
-        form.addRow("Descricao*:", self.txt_descricao)
+        form.addRow("Descrição*:", self.txt_descricao)
 
         self.spin_qtde = QtWidgets.QDoubleSpinBox()
         self.spin_qtde.setRange(0, 9_999_999)
@@ -59,7 +59,7 @@ class ItemProdutoDialog(QtWidgets.QDialog):
         self.spin_punit.setDecimals(4)
         self.spin_punit.setPrefix("R$ ")
         self.spin_punit.valueChanged.connect(self._recalcular)
-        form.addRow("Preco unitario:", self.spin_punit)
+        form.addRow("Preço unitário:", self.spin_punit)
 
         self.spin_desconto = QtWidgets.QDoubleSpinBox()
         self.spin_desconto.setRange(0, 9_999_999)
@@ -111,10 +111,10 @@ class ItemProdutoDialog(QtWidgets.QDialog):
     def _confirmar(self) -> None:
         descricao = self.txt_descricao.text().strip()
         if not self.spin_codprod.value():
-            QtWidgets.QMessageBox.warning(self, "Validacao", "Selecione um produto.")
+            QtWidgets.QMessageBox.warning(self, "Validação", "Selecione um produto.")
             return
         if not descricao:
-            QtWidgets.QMessageBox.warning(self, "Validacao", "Informe a descricao do produto.")
+            QtWidgets.QMessageBox.warning(self, "Validação", "Informe a descrição do produto.")
             self.txt_descricao.setFocus()
             return
 
@@ -131,3 +131,4 @@ class ItemProdutoDialog(QtWidgets.QDialog):
     @property
     def item(self) -> ItemProduto:
         return self._item
+

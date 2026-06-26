@@ -57,6 +57,12 @@ _COLS_OS = (
     "o.TIPOOS, o.SITUACAO, o.KM, o.CODCOB, o.CODPLPAG, o.DTCADASTRO, o.DTPREVTERM, "
     "o.DTFECHA, o.DTCANCEL, o.MOTIVOCANCEL, o.NUMTRANSVENDASERV, o.NUMTRANSVENDAPROD, "
     "o.NUMPED, o.OBS, "
+    "(SELECT c.CLIENTE FROM PCCLIENT c WHERE c.CODCLI = o.CODCLI) CLIENTE_NOME, "
+    "(SELECT v.PLACA FROM PCOSVEICULO v WHERE v.CODOSVEICULO = o.CODOSVEICULO) PLACA_VEICULO, "
+    "(SELECT ma.MARCA || '/' || mo.MODELO || '/' || v.ANO "
+    "FROM PCOSVEICULO v JOIN PCOSVEICULOMODELO mo ON mo.CODOSMODELO = v.CODOSMODELO "
+    "JOIN PCOSVEICULOMARCA ma ON ma.CODOSMARCA = mo.CODOSMARCA "
+    "WHERE v.CODOSVEICULO = o.CODOSVEICULO) DESCRICAO_VEICULO, "
     f"{_SUB_VLSERV} VLSERV, {_SUB_VLPROD} VLPROD"
 )
 
@@ -100,9 +106,12 @@ def _row_para_os(row: Any) -> OrdemServico:
         num_os=int(m["NUMOS"]),
         cod_filial=m["CODFILIAL"] or "",
         cod_cli=int(m["CODCLI"]) if m["CODCLI"] is not None else None,
+        cliente_nome=m["CLIENTE_NOME"],
         cod_rca=int(m["CODRCA"]) if m["CODRCA"] is not None else None,
         cod_func_abertura=int(m["CODEMITENTE"]) if m["CODEMITENTE"] is not None else None,
         cod_veiculo=int(m["CODOSVEICULO"]) if m["CODOSVEICULO"] is not None else None,
+        placa_veiculo=m["PLACA_VEICULO"],
+        descricao_veiculo=m["DESCRICAO_VEICULO"],
         tipo_os=str(int(m["TIPOOS"])) if m["TIPOOS"] is not None else None,
         situacao=_situacao(m["SITUACAO"]),
         km=int(m["KM"]) if m["KM"] is not None else None,
@@ -248,9 +257,13 @@ class OrdemServicoRepoWinthor:
         return os_
 
     # ------------------------------------------------------------- escrita (cabecalho)
+    def proximo_num_os(self) -> int:
+        with get_engine().connect() as cx:
+            return int(cx.execute(text("SELECT DFSEQ_PCORDEMSERVICO.NEXTVAL FROM DUAL")).scalar_one())
+
     def inserir(self, os_: OrdemServico) -> int:
         with get_engine().begin() as cx:
-            num_os = int(cx.execute(text("SELECT DFSEQ_PCORDEMSERVICO.NEXTVAL FROM DUAL")).scalar_one())
+            num_os = int(os_.num_os or cx.execute(text("SELECT DFSEQ_PCORDEMSERVICO.NEXTVAL FROM DUAL")).scalar_one())
             cx.execute(
                 text(
                     "INSERT INTO PCORDEMSERVICO ("
@@ -292,7 +305,7 @@ class OrdemServicoRepoWinthor:
         with get_engine().begin() as cx:
             cx.execute(
                 text(
-                    "UPDATE PCORDEMSERVICO SET SITUACAO = 5, DTCANCEL = SYSDATE, "
+                    "UPDATE PCORDEMSERVICO SET SITUACAO = 3, DTCANCEL = SYSDATE, "
                     "MOTIVOCANCEL = :motivo WHERE NUMOS = :numos"
                 ),
                 {"motivo": motivo, "numos": num_os},

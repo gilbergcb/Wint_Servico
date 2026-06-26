@@ -28,9 +28,9 @@ Ciclo de vida da O.S. (campo `SITUACAO`):
 |--------|-------------|--------------------------------------------------------|
 | 1      | Aberta      | O.S. criada, itens em edicao                           |
 | 2      | EmExecucao  | Servicos iniciados (tecnico alocado, DTINICIO)         |
-| 3      | Concluida   | Todos os itens finalizados (DTFINAL, DTFECHA)          |
-| 4      | Faturada    | Gerou transacao de venda (servico e/ou produto)        |
-| 5      | Cancelada   | Cancelada (DTCANCEL + MOTIVOCANCEL)                     |
+| 3      | Cancelada   | O.S. cancelada                                         |
+| 4      | Concluida   | Todos os itens finalizados (DTFINAL, DTFECHA)          |
+| 5      | Faturada    | O.S. faturada                                          |
 
 Fluxo detalhado:
 

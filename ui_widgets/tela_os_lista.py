@@ -7,29 +7,37 @@ from __future__ import annotations
 
 from datetime import datetime, time
 
-from PyQt6 import QtCore, QtWidgets
+from PyQt6 import QtCore, QtGui, QtWidgets
 
 from core.conexao_oracle import ConexaoOracle
 from core.os_repo_factory import obter_os_repo
 from modelos.ordem_servico import OrdemServico, SituacaoOS
 from ui_widgets.tela_os_edicao import TelaOSEdicao
-from ui_widgets.theme import marcar_botao
+from ui_widgets.theme import StatusBadgeDelegate, configurar_combo, configurar_grid, marcar_botao
 
 _SITUACOES_FILTRO = [
     (None, "Todas"),
     (SituacaoOS.ABERTA, "Aberta"),
-    (SituacaoOS.EM_EXECUCAO, "Em execucao"),
-    (SituacaoOS.CONCLUIDA, "Concluida"),
-    (SituacaoOS.FATURADA, "Faturada"),
+    (SituacaoOS.EM_EXECUCAO, "Em execução"),
     (SituacaoOS.CANCELADA, "Cancelada"),
+    (SituacaoOS.CONCLUIDA, "Concluída"),
+    (SituacaoOS.FATURADA, "Faturada"),
 ]
 
 _ROTULO_SITUACAO = {
     SituacaoOS.ABERTA: "Aberta",
-    SituacaoOS.EM_EXECUCAO: "Em execucao",
-    SituacaoOS.CONCLUIDA: "Concluida",
-    SituacaoOS.FATURADA: "Faturada",
+    SituacaoOS.EM_EXECUCAO: "Em execução",
     SituacaoOS.CANCELADA: "Cancelada",
+    SituacaoOS.CONCLUIDA: "Concluída",
+    SituacaoOS.FATURADA: "Faturada",
+}
+
+_COR_BADGE = {
+    SituacaoOS.ABERTA: ("#ffedd5", "#9a3412"),
+    SituacaoOS.EM_EXECUCAO: ("#fef9c3", "#854d0e"),
+    SituacaoOS.CANCELADA: ("#fee2e2", "#991b1b"),
+    SituacaoOS.CONCLUIDA: ("#dcfce7", "#166534"),
+    SituacaoOS.FATURADA: ("#dcfce7", "#14532d"),
 }
 
 
@@ -45,7 +53,7 @@ class TelaOSLista(QtWidgets.QWidget):
         layout.setContentsMargins(20, 18, 20, 18)
         layout.setSpacing(10)
 
-        titulo = QtWidgets.QLabel("Ordens de Servico")
+        titulo = QtWidgets.QLabel("Ordens de Serviço")
         titulo.setObjectName("telaTitulo")
         layout.addWidget(titulo)
 
@@ -65,8 +73,9 @@ class TelaOSLista(QtWidgets.QWidget):
         self.dt_fim.setCalendarPopup(True)
         self.dt_fim.setDisplayFormat("dd/MM/yyyy")
         self.dt_fim.setDate(QtCore.QDate.currentDate())
-        self.chk_periodo = QtWidgets.QCheckBox("Periodo")
+        self.chk_periodo = QtWidgets.QCheckBox("Período")
         self.cmb_situacao = QtWidgets.QComboBox()
+        configurar_combo(self.cmb_situacao)
         for sit, rotulo in _SITUACOES_FILTRO:
             self.cmb_situacao.addItem(rotulo, sit)
         btn_pesquisar = QtWidgets.QPushButton("Pesquisar")
@@ -80,18 +89,37 @@ class TelaOSLista(QtWidgets.QWidget):
         filtros.addWidget(self.dt_ini)
         filtros.addWidget(QtWidgets.QLabel("a"))
         filtros.addWidget(self.dt_fim)
-        filtros.addWidget(QtWidgets.QLabel("Situacao:"))
+        filtros.addWidget(QtWidgets.QLabel("Situação:"))
         filtros.addWidget(self.cmb_situacao)
         filtros.addStretch(1)
         filtros.addWidget(btn_pesquisar)
         layout.addLayout(filtros)
 
         # --- tabela ---
-        self.tabela = QtWidgets.QTableWidget(0, 5)
-        self.tabela.setHorizontalHeaderLabels(["Nº O.S.", "Cliente", "Situacao", "Dt Cadastro", "Vl Total"])
-        self.tabela.horizontalHeader().setSectionResizeMode(
-            1, QtWidgets.QHeaderView.ResizeMode.Stretch
+        self.tabela = QtWidgets.QTableWidget(0, 11)
+        configurar_grid(self.tabela)
+        self.tabela.setItemDelegateForColumn(6, StatusBadgeDelegate(self.tabela))
+        self.tabela.setHorizontalHeaderLabels(
+            [
+                "Nº O.S.", "Cód.Cliente", "Cliente", "Placa veículo", "Descrição do veículo",
+                "KM", "Situação", "Dt Cadastro", "Vl Serviços", "Vl Produtos", "Vl Total",
+            ]
         )
+        cab = self.tabela.horizontalHeader()
+        for col in range(self.tabela.columnCount()):
+            cab.setSectionResizeMode(col, QtWidgets.QHeaderView.ResizeMode.Interactive)
+        cab.setSectionResizeMode(2, QtWidgets.QHeaderView.ResizeMode.Stretch)
+        self.tabela.setColumnWidth(0, 100)
+        self.tabela.setColumnWidth(1, 100)
+        self.tabela.setColumnWidth(2, 470)
+        self.tabela.setColumnWidth(3, 100)
+        self.tabela.setColumnWidth(4, 260)
+        self.tabela.setColumnWidth(5, 100)
+        self.tabela.setColumnWidth(6, 100)
+        self.tabela.setColumnWidth(7, 100)
+        self.tabela.setColumnWidth(8, 100)
+        self.tabela.setColumnWidth(9, 100)
+        self.tabela.setColumnWidth(10, 100)
         self.tabela.setEditTriggers(QtWidgets.QAbstractItemView.EditTrigger.NoEditTriggers)
         self.tabela.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectionBehavior.SelectRows)
         self.tabela.setSelectionMode(QtWidgets.QAbstractItemView.SelectionMode.SingleSelection)
@@ -117,7 +145,7 @@ class TelaOSLista(QtWidgets.QWidget):
     # ----------------------------------------------------------------- helpers
     def _offline(self) -> bool:
         if ConexaoOracle.instance().offline:
-            self.lbl_status.setText("Sem conexao com o banco (modo dev). Operacoes indisponiveis.")
+            self.lbl_status.setText("Sem conexão com o banco (modo dev). Operações indisponíveis.")
             return True
         return False
 
@@ -157,14 +185,32 @@ class TelaOSLista(QtWidgets.QWidget):
             self.tabela.insertRow(linha)
             self.tabela.setItem(linha, 0, QtWidgets.QTableWidgetItem(str(os_.num_os or "")))
             self.tabela.setItem(linha, 1, QtWidgets.QTableWidgetItem(str(os_.cod_cli or "")))
-            self.tabela.setItem(linha, 2, QtWidgets.QTableWidgetItem(_ROTULO_SITUACAO.get(os_.situacao, "")))
+            self.tabela.setItem(linha, 2, QtWidgets.QTableWidgetItem(os_.cliente_nome or ""))
+            self.tabela.setItem(linha, 3, QtWidgets.QTableWidgetItem(os_.placa_veiculo or ""))
+            self.tabela.setItem(linha, 4, QtWidgets.QTableWidgetItem(os_.descricao_veiculo or ""))
+            self.tabela.setItem(linha, 5, QtWidgets.QTableWidgetItem(str(os_.km or "")))
+            self.tabela.setItem(linha, 6, self._item_situacao(os_.situacao))
             dt = os_.dt_cadastro.strftime("%d/%m/%Y") if os_.dt_cadastro else ""
-            self.tabela.setItem(linha, 3, QtWidgets.QTableWidgetItem(dt))
-            it_total = QtWidgets.QTableWidgetItem(f"{os_.vl_total:,.2f}")
-            it_total.setTextAlignment(
-                QtCore.Qt.AlignmentFlag.AlignRight | QtCore.Qt.AlignmentFlag.AlignVCenter
-            )
-            self.tabela.setItem(linha, 4, it_total)
+            self.tabela.setItem(linha, 7, QtWidgets.QTableWidgetItem(dt))
+            self._set_valor(linha, 8, os_.vl_total_servico)
+            self._set_valor(linha, 9, os_.vl_total_produto)
+            self._set_valor(linha, 10, os_.vl_total)
+
+    def _set_valor(self, linha: int, coluna: int, valor) -> None:  # noqa: ANN001
+        item = QtWidgets.QTableWidgetItem(f"{valor:,.2f}")
+        item.setTextAlignment(
+            QtCore.Qt.AlignmentFlag.AlignRight | QtCore.Qt.AlignmentFlag.AlignVCenter
+        )
+        self.tabela.setItem(linha, coluna, item)
+
+    def _item_situacao(self, situacao: SituacaoOS) -> QtWidgets.QTableWidgetItem:
+        item = QtWidgets.QTableWidgetItem(_ROTULO_SITUACAO.get(situacao, ""))
+        item.setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
+        item.setFont(QtGui.QFont("Segoe UI", 9, QtGui.QFont.Weight.Bold))
+        fundo, texto = _COR_BADGE.get(situacao, ("#f3f4f6", "#374151"))
+        item.setForeground(QtGui.QColor(texto))
+        item.setData(QtCore.Qt.ItemDataRole.UserRole, (fundo, texto))
+        return item
 
     def _nova(self) -> None:
         if self._offline():
@@ -183,3 +229,4 @@ class TelaOSLista(QtWidgets.QWidget):
         dlg = TelaOSEdicao(os_.num_os, self)
         if dlg.exec():
             self._pesquisar()
+

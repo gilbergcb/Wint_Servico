@@ -74,7 +74,7 @@ class MainWindow(QtWidgets.QMainWindow):
         # marca / logo (clique fixa o menu)
         self.brand = QtWidgets.QToolButton()
         self.brand.setProperty("variant", "nav")
-        self.brand.setText("Servico / Oficina")
+        self.brand.setText("Serviço / Manutenção")
         self.brand.setIcon(QtGui.QIcon(self._logo_pixmap()))
         self.brand.setIconSize(QtCore.QSize(30, 30))
         self.brand.setToolButtonStyle(QtCore.Qt.ToolButtonStyle.ToolButtonIconOnly)
@@ -91,11 +91,10 @@ class MainWindow(QtWidgets.QMainWindow):
         # --- navegacao ---
         self.stack = QtWidgets.QStackedWidget()
         modulos = [
-            ("home", "Inicio", TelaHome()),
-            ("cadastro", "Cadastro de Servico", TelaCadastroServico()),
-            ("os", "Ordens de Servico", TelaOSLista()),
+            ("home", "Início", TelaHome()),
+            ("os", "Ordens de Serviço", TelaOSLista()),
             ("acompanhamento", "Acompanhamento", TelaAcompanhamento()),
-            ("relatorios", "Relatorios", TelaRelatorios()),
+            ("relatorios", "Relatórios", TelaRelatorios()),
         ]
         for indice, (icone_nome, rotulo, widget) in enumerate(modulos):
             self.stack.addWidget(widget)
@@ -107,7 +106,13 @@ class MainWindow(QtWidgets.QMainWindow):
         menu_layout.addStretch(1)
 
         # --- rodape: configuracao + tema ---
-        self.btn_config = self._criar_botao("config", "Configuracao", checkable=False)
+        indice_cadastro = self.stack.addWidget(TelaCadastroServico())
+        self.btn_cadastro = self._criar_botao("cadastro", "Cadastro de Serviço", checkable=True)
+        self.btn_cadastro.clicked.connect(lambda _=False, i=indice_cadastro: self._selecionar(i))
+        menu_layout.addWidget(self.btn_cadastro)
+        self._nav_btns.append(self.btn_cadastro)
+
+        self.btn_config = self._criar_botao("config", "Configuração", checkable=False)
         self.btn_config.clicked.connect(self._abrir_configuracao)
         menu_layout.addWidget(self.btn_config)
 
@@ -157,7 +162,7 @@ class MainWindow(QtWidgets.QMainWindow):
         p.setPen(QtGui.QColor("#ffffff"))
         f = QtGui.QFont("Segoe UI", 13, QtGui.QFont.Weight.Bold)
         p.setFont(f)
-        p.drawText(QtCore.QRectF(0, 0, tam, tam), QtCore.Qt.AlignmentFlag.AlignCenter, "S")
+        p.drawText(QtCore.QRectF(0, 0, tam, tam), QtCore.Qt.AlignmentFlag.AlignCenter, "OS")
         p.end()
         return pm
 
@@ -215,6 +220,11 @@ class MainWindow(QtWidgets.QMainWindow):
         from .configuracao_dialog import ConfiguracaoDialog
 
         ConfiguracaoDialog(self).exec()
+        for i in range(self.stack.count()):
+            widget = self.stack.widget(i)
+            recarregar = getattr(widget, "recarregar_configuracoes", None)
+            if callable(recarregar):
+                recarregar()
 
     @QtCore.pyqtSlot()
     def _alternar_tema(self) -> None:

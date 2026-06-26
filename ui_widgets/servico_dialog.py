@@ -17,7 +17,7 @@ class ServicoDialog(QtWidgets.QDialog):
         super().__init__(parent)
         self._servico = servico or Servico()
         editando = servico is not None and servico.cod_servico is not None
-        self.setWindowTitle("Editar servico" if editando else "Incluir servico")
+        self.setWindowTitle("Editar serviço" if editando else "Incluir serviço")
         self.resize(520, 0)
         self._montar_ui()
         self._carregar(self._servico)
@@ -28,11 +28,11 @@ class ServicoDialog(QtWidgets.QDialog):
         form.setLabelAlignment(QtCore.Qt.AlignmentFlag.AlignRight)
 
         self.lbl_codigo = QtWidgets.QLabel("(novo)")
-        form.addRow("Codigo:", self.lbl_codigo)
+        form.addRow("Código:", self.lbl_codigo)
 
         self.txt_descricao = QtWidgets.QLineEdit()
         self.txt_descricao.setMaxLength(100)
-        form.addRow("Descricao*:", self.txt_descricao)
+        form.addRow("Descrição*:", self.txt_descricao)
 
         # Produto vinculado (Opcao A) + lookup
         linha_prod = QtWidgets.QHBoxLayout()
@@ -58,7 +58,7 @@ class ServicoDialog(QtWidgets.QDialog):
         self.spin_preco.setRange(0, 9_999_999)
         self.spin_preco.setDecimals(2)
         self.spin_preco.setPrefix("R$ ")
-        form.addRow("Preco padrao:", self.spin_preco)
+        form.addRow("Preço padrão:", self.spin_preco)
 
         self.spin_tempo = QtWidgets.QSpinBox()
         self.spin_tempo.setRange(0, 999999)
@@ -72,7 +72,7 @@ class ServicoDialog(QtWidgets.QDialog):
         self.spin_iss.setRange(0, 100)
         self.spin_iss.setDecimals(2)
         self.spin_iss.setSuffix(" %")
-        form.addRow("Aliquota ISS:", self.spin_iss)
+        form.addRow("Alíquota ISS:", self.spin_iss)
 
         self.chk_ativo = QtWidgets.QCheckBox("Ativo")
         self.chk_ativo.setChecked(True)
@@ -80,7 +80,7 @@ class ServicoDialog(QtWidgets.QDialog):
 
         self.txt_obs = QtWidgets.QPlainTextEdit()
         self.txt_obs.setFixedHeight(64)
-        form.addRow("Observacoes:", self.txt_obs)
+        form.addRow("Observações:", self.txt_obs)
 
         layout.addLayout(form)
 
@@ -117,14 +117,14 @@ class ServicoDialog(QtWidgets.QDialog):
     def _gravar(self) -> None:
         descricao = self.txt_descricao.text().strip()
         if not descricao:
-            QtWidgets.QMessageBox.warning(self, "Validacao", "Informe a descricao do servico.")
+            QtWidgets.QMessageBox.warning(self, "Validação", "Informe a descrição do serviço.")
             self.txt_descricao.setFocus()
             return
         try:
             preco = Decimal(str(self.spin_preco.value()))
             iss = Decimal(str(self.spin_iss.value()))
         except (InvalidOperation, ValueError):
-            QtWidgets.QMessageBox.warning(self, "Validacao", "Valores numericos invalidos.")
+            QtWidgets.QMessageBox.warning(self, "Validação", "Valores numéricos inválidos.")
             return
 
         s = self._servico
@@ -143,3 +143,4 @@ class ServicoDialog(QtWidgets.QDialog):
     @property
     def servico(self) -> Servico:
         return self._servico
+
